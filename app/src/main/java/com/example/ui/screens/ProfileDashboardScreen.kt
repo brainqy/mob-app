@@ -59,6 +59,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.UserEntity
+import com.example.data.QuizResult
+import com.example.ui.components.RecentQuizzesSection
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -73,6 +75,7 @@ fun ProfileDashboardScreen(
     onOpenEditModal: () -> Unit,
     onCloseEditModal: () -> Unit,
     onSaveProfile: (String, String, Int) -> Unit,
+    recentQuizResults: List<QuizResult> = emptyList(),
     currentTenant: String = "platform",
     currentRole: String = "User",
     currentLanguage: String = "en",

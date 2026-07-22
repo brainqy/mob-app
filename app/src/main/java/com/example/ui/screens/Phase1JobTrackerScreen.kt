@@ -71,12 +71,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.I18nHelper
 import com.example.data.JobEntity
+import com.example.data.QuizResult
 
 @Composable
 fun Phase1JobTrackerScreen(
     jobs: List<JobEntity>,
     currentTenant: String,
     currentLanguage: String,
+    recentQuizResults: List<QuizResult> = emptyList(),
     onAddJob: (JobEntity) -> Unit,
     onUpdateStatus: (String, String) -> Unit,
     onDeleteJob: (String) -> Unit,
@@ -228,6 +230,7 @@ fun Phase1JobTrackerScreen(
 
             if (selectedSubTab == 0) {
                 InterviewDashboardComponent(
+                    recentQuizResults = recentQuizResults,
                     onShowToast = { msg -> onScheduleReminder(msg) }
                 )
             } else {

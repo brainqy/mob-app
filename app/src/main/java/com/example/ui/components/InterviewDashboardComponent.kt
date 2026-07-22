@@ -92,6 +92,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.InterviewDashboardUiState
+import com.example.data.QuizResult
 import com.example.data.InterviewItem
 import com.example.data.InterviewStatusUpdate
 import com.example.data.InterviewsRepository
@@ -235,6 +236,7 @@ fun LocalPushNotificationBanner(
 @Composable
 fun InterviewDashboardComponent(
     repository: InterviewsRepository = remember { InterviewsRepository() },
+    recentQuizResults: List<QuizResult> = emptyList(),
     modifier: Modifier = Modifier,
     onShowToast: (String) -> Unit = {}
 ) {
@@ -494,7 +496,15 @@ fun InterviewDashboardComponent(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // RECENT QUIZZES SECTION
+                RecentQuizzesSection(
+                    recentQuizzes = recentQuizResults,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Dashboard Mode Toggle Switcher (Calendar View vs Visual Trends vs Updates Stream)
                 Surface(

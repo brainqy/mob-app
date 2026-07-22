@@ -73,12 +73,15 @@ import com.example.data.I18nHelper
 import com.example.data.QuestionEntity
 import com.example.data.QuizEntity
 import com.example.data.QuizResult
+import com.example.ui.components.RecentQuizzesSection
 
 @Composable
 fun Phase2InterviewPrepScreen(
     questions: List<QuestionEntity>,
     quizzes: List<QuizEntity>,
     currentLanguage: String,
+    recentQuizResults: List<QuizResult> = emptyList(),
+    onSaveQuizResult: (QuizResult) -> Unit = {},
     onToggleBookmark: (String) -> Unit,
     onCreateQuiz: (String, String, List<QuestionEntity>) -> Unit,
     onQuizStateChanged: (Boolean) -> Unit = {},
@@ -137,6 +140,7 @@ fun Phase2InterviewPrepScreen(
                 1 -> QuizzesSection(
                     quizzes = quizzes,
                     questions = questions,
+                    recentQuizResults = recentQuizResults,
                     onStartQuiz = { quiz -> activeQuiz = quiz },
                     onCreateQuiz = onCreateQuiz
                 )
@@ -167,6 +171,7 @@ fun Phase2InterviewPrepScreen(
                 QuizPlayerView(
                     quiz = activeQuiz!!,
                     onFinishQuiz = { result ->
+                        onSaveQuizResult(result)
                         activeQuizResult = result
                         activeQuiz = null
                     },
@@ -440,6 +445,7 @@ private fun QuestionCardItem(
 private fun QuizzesSection(
     quizzes: List<QuizEntity>,
     questions: List<QuestionEntity>,
+    recentQuizResults: List<QuizResult> = emptyList(),
     onStartQuiz: (QuizEntity) -> Unit,
     onCreateQuiz: (String, String, List<QuestionEntity>) -> Unit
 ) {
@@ -449,14 +455,23 @@ private fun QuizzesSection(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
+        if (recentQuizResults.isNotEmpty()) {
+            RecentQuizzesSection(
+                recentQuizzes = recentQuizResults,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Practice Quizzes",
+                text = "Available Quizzes",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
             )
 
@@ -469,49 +484,45 @@ private fun QuizzesSection(
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(quizzes, key = { it.id }) { quiz ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("quiz_card_${quiz.id}"),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+        quizzes.forEach { quiz ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+                    .testTag("quiz_card_${quiz.id}"),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = quiz.title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        text = quiz.description,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = quiz.title,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = quiz.description,
-                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${quiz.questions.size} Questions",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                            text = "${quiz.questions.size} Questions",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
                             )
-                            Button(
-                                onClick = { onStartQuiz(quiz) },
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.testTag("start_quiz_button_${quiz.id}")
-                            ) {
-                                Text("Start Practice")
-                            }
+                        )
+                        Button(
+                            onClick = { onStartQuiz(quiz) },
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.testTag("start_quiz_button_${quiz.id}")
+                        ) {
+                            Text("Start Practice")
                         }
                     }
                 }
@@ -531,255 +542,8 @@ private fun QuizzesSection(
     }
 }
 
-@Composable
-private fun QuizPlayerView(
-    quiz: QuizEntity,
-    onFinishQuiz: (QuizResult) -> Unit,
-    onExit: () -> Unit
-) {
-    var currentIndex by remember { mutableIntStateOf(0) }
-    val userAnswers = remember { mutableStateMapOf<String, Int>() }
+// QuizPlayerView and QuizResultView are now rendered using QuizPlayerComponents.kt
 
-    val currentQuestion = quiz.questions.getOrNull(currentIndex) ?: return
-    val progress = (currentIndex + 1).toFloat() / quiz.questions.size
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // Full Screen Top Header Bar
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 4.dp,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onExit) {
-                            Icon(Icons.Default.Close, contentDescription = "Exit Full Screen Quiz")
-                        }
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Column {
-                            Text(
-                                text = quiz.title,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Text(
-                                text = "Full Screen Practice Mode",
-                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary)
-                            )
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = "${currentIndex + 1} / ${quiz.questions.size}",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            ),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = currentQuestion.questionText,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    currentQuestion.options.forEachIndexed { optIndex, optionText ->
-                        val isSelected = userAnswers[currentQuestion.id] == optIndex
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { userAnswers[currentQuestion.id] = optIndex }
-                                .testTag("quiz_option_${currentIndex}_$optIndex"),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = isSelected,
-                                    onClick = { userAnswers[currentQuestion.id] = optIndex }
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = optionText,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    onClick = { if (currentIndex > 0) currentIndex-- },
-                    enabled = currentIndex > 0,
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.Default.NavigateBefore, contentDescription = null)
-                    Text("Previous")
-                }
-
-                if (currentIndex < quiz.questions.size - 1) {
-                    Button(
-                        onClick = { currentIndex++ },
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text("Next")
-                        Icon(Icons.Default.NavigateNext, contentDescription = null)
-                    }
-                } else {
-                    Button(
-                        onClick = {
-                            var correctCount = 0
-                            quiz.questions.forEach { q ->
-                                if (userAnswers[q.id] == q.correctOptionIndex) {
-                                    correctCount++
-                                }
-                            }
-                            val scorePct = ((correctCount.toFloat() / quiz.questions.size) * 100).toInt()
-                            onFinishQuiz(
-                                QuizResult(
-                                    quizTitle = quiz.title,
-                                    totalQuestions = quiz.questions.size,
-                                    correctAnswers = correctCount,
-                                    scorePercentage = scorePct,
-                                    userAnswers = userAnswers.toMap()
-                                )
-                            )
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier.testTag("submit_quiz_button")
-                    ) {
-                        Text("Submit Quiz")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuizResultView(
-    result: QuizResult,
-    onDismiss: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Quiz Completed! 🎉",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = result.quizTitle,
-            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "${result.scorePercentage}%",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                )
-                Text(
-                    text = "${result.correctAnswers} / ${result.totalQuestions} Questions Correct",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        Button(
-            onClick = onDismiss,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("Back to Practice Quizzes")
-        }
-    }
-}
 
 @Composable
 private fun BookMockInterviewSection(onShowToast: (String) -> Unit) {

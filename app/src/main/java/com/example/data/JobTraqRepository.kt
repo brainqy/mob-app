@@ -196,6 +196,52 @@ class JobTraqRepository {
     )
     val quizzes: StateFlow<List<QuizEntity>> = _quizzes.asStateFlow()
 
+    private val _recentQuizResults = MutableStateFlow<List<QuizResult>>(
+        listOf(
+            QuizResult(
+                quizTitle = "Android & Kotlin Core Assessment",
+                totalQuestions = 4,
+                correctAnswers = 3,
+                scorePercentage = 75,
+                userAnswers = mapOf("q-1" to 0, "q-2" to 1, "q-3" to 2, "q-4" to 0),
+                quiz = _quizzes.value.firstOrNull { it.id == "quiz-1" },
+                durationSeconds = 145,
+                isChallengeMode = true
+            ),
+            QuizResult(
+                quizTitle = "System Design & Multi-Tenancy Quiz",
+                totalQuestions = 2,
+                correctAnswers = 2,
+                scorePercentage = 100,
+                userAnswers = mapOf("q-3" to 2, "q-4" to 2),
+                quiz = _quizzes.value.firstOrNull { it.id == "quiz-2" },
+                durationSeconds = 90,
+                isChallengeMode = false
+            ),
+            QuizResult(
+                quizTitle = "Algorithms & Data Structures Practice",
+                totalQuestions = 4,
+                correctAnswers = 4,
+                scorePercentage = 100,
+                userAnswers = mapOf("q-1" to 0, "q-2" to 1, "q-3" to 2, "q-4" to 2),
+                quiz = _quizzes.value.firstOrNull(),
+                durationSeconds = 180,
+                isChallengeMode = true
+            ),
+            QuizResult(
+                quizTitle = "Jetpack Compose UI & State Management",
+                totalQuestions = 3,
+                correctAnswers = 2,
+                scorePercentage = 66,
+                userAnswers = mapOf("q-1" to 0, "q-2" to 0),
+                quiz = _quizzes.value.firstOrNull(),
+                durationSeconds = 110,
+                isChallengeMode = false
+            )
+        )
+    )
+    val recentQuizResults: StateFlow<List<QuizResult>> = _recentQuizResults.asStateFlow()
+
     // Phase 3: Community Feed & Gamification
     private val _feedPosts = MutableStateFlow<List<FeedPostEntity>>(
         listOf(
@@ -301,7 +347,11 @@ class JobTraqRepository {
         }
     }
 
-    // Quiz Creation
+    // Quiz Creation & History
+    fun saveQuizResult(result: QuizResult) {
+        _recentQuizResults.value = (listOf(result) + _recentQuizResults.value).take(10)
+    }
+
     fun createQuiz(title: String, description: String, selectedQuestions: List<QuestionEntity>) {
         val newQuiz = QuizEntity(
             id = "quiz-${UUID.randomUUID().toString().take(6)}",

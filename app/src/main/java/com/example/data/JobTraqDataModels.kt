@@ -37,7 +37,12 @@ data class QuizResult(
     val totalQuestions: Int,
     val correctAnswers: Int,
     val scorePercentage: Int,
-    val userAnswers: Map<String, Int> // questionId -> chosenIndex
+    val userAnswers: Map<String, Int>, // questionId -> chosenIndex
+    val quiz: QuizEntity? = null,
+    val durationSeconds: Int = 120,
+    val isChallengeMode: Boolean = true,
+    val markedForReviewIds: Set<String> = emptySet(),
+    val bookmarkedIds: Set<String> = emptySet()
 )
 
 data class FeedPostEntity(
