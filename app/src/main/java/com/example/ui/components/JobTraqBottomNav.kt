@@ -1,0 +1,70 @@
+package com.example.ui.components
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.example.data.I18nHelper
+
+enum class JobTraqTab(val icon: ImageVector, val i18nKey: String, val tag: String) {
+    PIPELINE(Icons.Default.Work, "pipeline", "tab_pipeline"),
+    PREP_HUB(Icons.Default.Psychology, "prep_hub", "tab_prep"),
+    COMMUNITY(Icons.Default.Forum, "community", "tab_community"),
+    TOOLS(Icons.Default.AutoAwesome, "tools", "tab_tools"),
+    PROFILE(Icons.Default.AccountCircle, "profile", "tab_profile")
+}
+
+@Composable
+fun JobTraqBottomNav(
+    selectedTab: JobTraqTab,
+    currentLanguage: String,
+    onTabSelected: (JobTraqTab) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    NavigationBar(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface
+    ) {
+        JobTraqTab.entries.forEach { tab ->
+            val label = I18nHelper.getString(tab.i18nKey, currentLanguage)
+            NavigationBarItem(
+                selected = selectedTab == tab,
+                onClick = { onTabSelected(tab) },
+                icon = {
+                    Icon(
+                        imageVector = tab.icon,
+                        contentDescription = label
+                    )
+                },
+                label = {
+                    Text(
+                        text = label,
+                        fontSize = 11.sp,
+                        fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                modifier = Modifier.testTag(tab.tag)
+            )
+        }
+    }
+}

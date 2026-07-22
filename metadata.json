@@ -1,0 +1,6 @@
+{
+  "name": "JobTraq",
+  "description": "JobTraq Native Mobile App for Job Tracking, Interview Prep, AI Resume Analysis, Community, and Gamification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
